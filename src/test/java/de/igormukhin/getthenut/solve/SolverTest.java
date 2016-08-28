@@ -3,6 +3,7 @@ package de.igormukhin.getthenut.solve;
 import de.igormukhin.getthenut.Game;
 import de.igormukhin.getthenut.Level;
 import de.igormukhin.getthenut.textmap.TextBoard;
+import de.igormukhin.getthenut.textmap.TextGameFormatter;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -68,6 +69,7 @@ public class SolverTest {
         Game solution = solver.solve();
 
         // then
+        System.out.println(TextGameFormatter.of(solution).format());
         assertThat(solution.rolls()).isEqualTo(5);
     }
 
@@ -80,6 +82,7 @@ public class SolverTest {
         Game solution = solver.solve();
 
         // then
+        System.out.println(TextGameFormatter.of(solution).format());
         assertThat(solution.rolls()).isEqualTo(9);
     }
 
@@ -92,7 +95,7 @@ public class SolverTest {
         Game solution = solver.solve();
 
         // then
-        //System.out.println(TextGameFormatter.of(solution).format());
+        System.out.println(TextGameFormatter.of(solution).format());
         assertThat(solution.rolls()).isEqualTo(34);
     }
 

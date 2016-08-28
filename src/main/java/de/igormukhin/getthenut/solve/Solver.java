@@ -2,14 +2,11 @@ package de.igormukhin.getthenut.solve;
 
 import com.google.common.base.Preconditions;
 import de.igormukhin.getthenut.*;
-import de.igormukhin.getthenut.IllegalMoveException;
 
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
+import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
@@ -27,39 +24,46 @@ public class Solver {
     }
 
     public Game solve() throws NoSolutionException {
-        return new TreeWalker().invoke();
+        Searcher searcher = new Searcher();
+        searcher.traverse();
+
+        return searcher.findShortestSolution().orElseThrow(NoSolutionException::new);
     }
 
-    private class TreeWalker {
+    private class Path {
 
-        private final Map<ActorSet, Game> shortestPaths = new HashMap<>();
-        private final Set<ActorSet> noSolutionBoards = new HashSet<>();
-        private Game bestGame;
+        private final Game game;
 
-        public Game invoke() {
+        // this solution always includes the `game` as a step
+        private Game solution;
 
-            solveFrom(initialGame, (solution) -> {
-                if (bestGame == null || bestGame.rolls() > solution.rolls()) {
-                    bestGame = solution;
-                }
-            }, (g) -> {}, (g) -> {});
-
-            if (bestGame == null) {
-                throw new NoSolutionException();
-            }
-
-            // DEBUG
-            for (Game roll : bestGame.rollsAsGameList()) {
-                if (noSolutionBoards.contains(roll.actorsSet())) {
-                    System.out.println("noSolutionBoards contains\n" + roll);
-                }
-            }
-
-            return bestGame;
+        public Path(Game game) {
+            this(game, null);
         }
 
-        private void solveFrom(Game game, Consumer<Game> whenWon, Consumer<Game> cutOff, Consumer<Game> onUniqueBetterGameFound) {
-            for (Actor actor : game.actorsSet()) {
+        public Path(Game game, Game solution) {
+            this.game = game;
+            this.solution = solution;
+        }
+
+        public void updateSolution(Game newSolution) {
+            if (solution == null || newSolution.rolls() < solution.rolls()) {
+                solution = newSolution;
+            }
+        }
+    }
+
+    private class Searcher {
+
+        private final Map<ActorSet, Path> paths = new HashMap<>();
+
+        void traverse() {
+            beforeTraverseFrom(initialGame);
+            traverseFrom(initialGame);
+        }
+
+        private void traverseFrom(Game game) {
+            for (Actor actor : game.actorSet()) {
                 for (Direction direction : Direction.values()) {
                     Game nextGame;
                     try {
@@ -70,49 +74,71 @@ public class Solver {
 
                     if (nextGame.ended()) {
                         if (nextGame.won()) {
-                            whenWon.accept(nextGame);
+                            onWin(nextGame);
                         }
                         continue;
                     }
 
-                    if (isThereBetterOrSamePath(nextGame)) {
-                        cutOff.accept(nextGame);
-                        continue;
-                    } else {
-                        shortestPaths.put(nextGame.actorsSet(), nextGame);
-                    }
-
-                    if (noSolutionBoards.contains(nextGame.actorsSet())) {
-                        continue;
-                    }
-
-                    onUniqueBetterGameFound.accept(nextGame);
-
-                    AtomicBoolean hasAnyNewRolls = new AtomicBoolean();
-                    AtomicBoolean hasAnySolutions = new AtomicBoolean();
-                    AtomicBoolean hasCutOff = new AtomicBoolean();
-
-                    solveFrom(nextGame, (g) -> {
-                        hasAnySolutions.set(true);
-                        whenWon.accept(g);
-                    }, (g) -> {
-                        hasCutOff.set(true);
-                        cutOff.accept(g);
-                    }, (g) -> {
-                        hasAnyNewRolls.set(true);
-                        onUniqueBetterGameFound.accept(g);
-                    });
-
-                    if (!hasAnySolutions.get() && hasAnyNewRolls.get() && !hasCutOff.get()) {
-                        noSolutionBoards.add(nextGame.actorsSet());
+                    if (beforeTraverseFrom(nextGame)) {
+                        traverseFrom(nextGame);
                     }
                 }
             }
         }
 
-        private boolean isThereBetterOrSamePath(Game game) {
-            return shortestPaths.containsKey(game.actorsSet())
-                    && shortestPaths.get(game.actorsSet()).rolls() <= game.rolls();
+        /**
+         * TODO: this method violates command–query separation principle
+         */
+        private boolean beforeTraverseFrom(Game game) {
+            if (!paths.containsKey(game.actorSet())) {
+                // we are at a new game state
+                paths.put(game.actorSet(), new Path(game));
+                return true;
+            }
+
+            Path foundPath = paths.get(game.actorSet());
+            if (game.rolls() < foundPath.game.rolls()) {
+                Path newPath = new Path(game);
+                paths.put(game.actorSet(), newPath);
+
+                if (foundPath.solution != null) {
+                    Game improvedSolution = SolveHelper.rebase(foundPath.solution, game);
+                    onImprovedWin(improvedSolution);
+                }
+
+                // we already visited this game state but this path is faster
+                // we borrowed the part of the solution (see rebase)
+                // so no need to traverse the same sub-tree again
+                return false;
+            }
+
+            // we are at known position, but we got too slow here
+            return false;
+        }
+
+        private void onImprovedWin(Game improvedSolution) {
+            for (Game roll : improvedSolution.parent().rollsAsGameList()) {
+                Path path = paths.get(roll.actorSet());
+                if (roll.rolls() < path.game.rolls()) {
+                    path = new Path(roll, path.solution);
+                    paths.put(path.game.actorSet(), path);
+                }
+
+                path.updateSolution(improvedSolution);
+            }
+        }
+
+        private void onWin(Game solution) {
+            for (Game roll : solution.parent().rollsAsGameList()) {
+                paths.get(roll.actorSet()).updateSolution(solution);
+            }
+        }
+
+        Optional<Game> findShortestSolution() {
+            return paths.values().stream()
+                    .map(path -> path.solution)
+                    .filter(solution -> solution != null)
+                    .min(Comparator.comparing(Game::rolls));
         }
     }
 }

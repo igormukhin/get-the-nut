@@ -153,8 +153,8 @@ public class GameTest {
 
         // then
         assertThat(game.rolls()).isEqualTo(1);
-        assertThat(game.actorsSet().actorTypeAt(Pos.of(1, 1))).contains(ActorType.SQUIRREL);
-        assertThat(game.actorsSet().actorTypeAt(Pos.of(1, 2))).isEmpty();
+        assertThat(game.actorSet().actorTypeAt(Pos.of(1, 1))).contains(ActorType.SQUIRREL);
+        assertThat(game.actorSet().actorTypeAt(Pos.of(1, 2))).isEmpty();
         assertThat(game.ended()).isTrue();
         assertThat(game.won()).isTrue();
     }

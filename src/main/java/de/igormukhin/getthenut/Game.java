@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static de.igormukhin.getthenut.ActorType.NUT;
 import static de.igormukhin.getthenut.ActorType.SQUIRREL;
 import static de.igormukhin.getthenut.SpotType.SWAMP;
@@ -54,7 +55,7 @@ public class Game {
         return parent;
     }
 
-    public ActorSet actorsSet() {
+    public ActorSet actorSet() {
         return actorSet;
     }
 
@@ -72,6 +73,13 @@ public class Game {
 
     public boolean won() {
         return won;
+    }
+
+    public Game withParent(Game newParent) {
+        // both parent should have same game state
+        checkArgument(this.parent().actorSet().equals(newParent.actorSet()));
+
+        return new Game(newParent, this.actorSet(), this.ended(), this.won());
     }
 
     public List<Game> rollsAsGameList() {
