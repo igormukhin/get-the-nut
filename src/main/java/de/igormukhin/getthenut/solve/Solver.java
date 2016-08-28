@@ -22,17 +22,30 @@ public class Solver {
         return new Solver(initialGame);
     }
 
-    public Game solve() throws NoSolutionException {
-        Searcher searcher = new Searcher();
+    public Game doSolve(SolverProgress solverProgress) throws NoSolutionException {
+        Searcher searcher = new Searcher(solverProgress);
         searcher.traverse();
 
         return searcher.getSolution().orElseThrow(NoSolutionException::new);
     }
 
+    public Game solve() throws NoSolutionException {
+        return doSolve(null);
+    }
+
+    public Game solve(SolverProgress solverProgress) throws NoSolutionException {
+        return doSolve(requireNonNull(solverProgress));
+    }
+
     private class Searcher {
 
+        private final SolverProgress solverProgress;
         private final Map<ActorSet, Game> paths = new HashMap<>();
         private Game solution;
+
+        public Searcher(SolverProgress solverProgress) {
+            this.solverProgress = solverProgress;
+        }
 
         void traverse() {
             traverseFrom(initialGame);
@@ -74,6 +87,10 @@ public class Solver {
         private boolean beforeTraverseFrom(Game game) {
             Game visitedState = paths.get(game.actorSet());
             if (visitedState == null || game.rolls() < visitedState.rolls()) {
+                if (solverProgress != null) {
+                    solverProgress.onBetterPathFound(game);
+                }
+
                 paths.put(game.actorSet(), game);
                 return true;
             }

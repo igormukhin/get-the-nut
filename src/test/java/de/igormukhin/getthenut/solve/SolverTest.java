@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SolverTest {
 
     @Rule
-    public Timeout globalTimeout = new Timeout(60, HOURS);
+    public Timeout globalTimeout = new Timeout(1, HOURS);
 
     @Test
     public void findOneRollSolution() {
@@ -92,11 +92,24 @@ public class SolverTest {
         Solver solver = Solver.of(Level.of(3, 36).start());
 
         // when
-        Game solution = solver.solve();
+        Game solution = solver.solve(new SolverProgressPrinter());
 
         // then
         System.out.println(TextGameFormatter.of(solution).format());
         assertThat(solution.rolls()).isEqualTo(34);
+    }
+
+    @Test
+    public void solvesLevelForrest15in10rolls() {
+        // given
+        Solver solver = Solver.of(Level.of(1, 15).start());
+
+        // when
+        Game solution = solver.solve();
+
+        // then
+        System.out.println(TextGameFormatter.of(solution).format());
+        assertThat(solution.rolls()).isEqualTo(10);
     }
 
 }
