@@ -1,4 +1,4 @@
-Get The Nut
+Get The Nut: The game simulator and solution finder
 =============================
 
 This is a Java implementation of the game [Get The Nut](https://play.google.com/store/apps/details?id=pixibots.games.getthenut.com) and a class that is able to search for a solution with the least rolls.
