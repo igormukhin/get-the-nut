@@ -3,7 +3,6 @@ package de.igormukhin.getthenut.solve;
 import com.google.common.base.Preconditions;
 import de.igormukhin.getthenut.*;
 
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -27,39 +26,20 @@ public class Solver {
         Searcher searcher = new Searcher();
         searcher.traverse();
 
-        return searcher.findShortestSolution().orElseThrow(NoSolutionException::new);
-    }
-
-    private class Path {
-
-        private final Game game;
-
-        // this solution always includes the `game` as a step
-        private Game solution;
-
-        public Path(Game game) {
-            this(game, null);
-        }
-
-        public Path(Game game, Game solution) {
-            this.game = game;
-            this.solution = solution;
-        }
-
-        public void updateSolution(Game newSolution) {
-            if (solution == null || newSolution.rolls() < solution.rolls()) {
-                solution = newSolution;
-            }
-        }
+        return searcher.getSolution().orElseThrow(NoSolutionException::new);
     }
 
     private class Searcher {
 
-        private final Map<ActorSet, Path> paths = new HashMap<>();
+        private final Map<ActorSet, Game> paths = new HashMap<>();
+        private Game solution;
 
         void traverse() {
-            beforeTraverseFrom(initialGame);
             traverseFrom(initialGame);
+        }
+
+        public Optional<Game> getSolution() {
+            return Optional.ofNullable(solution);
         }
 
         private void traverseFrom(Game game) {
@@ -79,7 +59,8 @@ public class Solver {
                         continue;
                     }
 
-                    if (beforeTraverseFrom(nextGame)) {
+                    boolean shouldTraverseFrom = beforeTraverseFrom(nextGame);
+                    if (shouldTraverseFrom) {
                         traverseFrom(nextGame);
                     }
                 }
@@ -87,58 +68,23 @@ public class Solver {
         }
 
         /**
-         * TODO: this method violates command–query separation principle
+         * This method violates command–query separation principle.
+         * But it is private.
          */
         private boolean beforeTraverseFrom(Game game) {
-            if (!paths.containsKey(game.actorSet())) {
-                // we are at a new game state
-                paths.put(game.actorSet(), new Path(game));
+            Game visitedState = paths.get(game.actorSet());
+            if (visitedState == null || game.rolls() < visitedState.rolls()) {
+                paths.put(game.actorSet(), game);
                 return true;
             }
 
-            Path foundPath = paths.get(game.actorSet());
-            if (game.rolls() < foundPath.game.rolls()) {
-                Path newPath = new Path(game);
-                paths.put(game.actorSet(), newPath);
-
-                if (foundPath.solution != null) {
-                    Game improvedSolution = SolveHelper.rebase(foundPath.solution, game);
-                    onImprovedWin(improvedSolution);
-                }
-
-                // we already visited this game state but this path is faster
-                // we borrowed the part of the solution (see rebase)
-                // so no need to traverse the same sub-tree again
-                return false;
-            }
-
-            // we are at known position, but we got too slow here
             return false;
         }
 
-        private void onImprovedWin(Game improvedSolution) {
-            for (Game roll : improvedSolution.parent().rollsAsGameList()) {
-                Path path = paths.get(roll.actorSet());
-                if (roll.rolls() < path.game.rolls()) {
-                    path = new Path(roll, path.solution);
-                    paths.put(path.game.actorSet(), path);
-                }
-
-                path.updateSolution(improvedSolution);
+        private void onWin(Game newSolution) {
+            if (solution == null || newSolution.rolls() < solution.rolls()) {
+                solution = newSolution;
             }
-        }
-
-        private void onWin(Game solution) {
-            for (Game roll : solution.parent().rollsAsGameList()) {
-                paths.get(roll.actorSet()).updateSolution(solution);
-            }
-        }
-
-        Optional<Game> findShortestSolution() {
-            return paths.values().stream()
-                    .map(path -> path.solution)
-                    .filter(solution -> solution != null)
-                    .min(Comparator.comparing(Game::rolls));
         }
     }
 }

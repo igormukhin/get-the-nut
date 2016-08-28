@@ -24,7 +24,7 @@ public class TextBoardFormatter {
         ActorSet actorSet = board.actorSet();
         String lineSeparator = System.lineSeparator();
         int expectedMapSize = land.height() * (land.width() + lineSeparator.length());
-        StringBuffer sb = new StringBuffer(expectedMapSize);
+        StringBuilder sb = new StringBuilder(expectedMapSize);
 
         for (int row = 0; row < land.height(); row++) {
             if (row > 0) {

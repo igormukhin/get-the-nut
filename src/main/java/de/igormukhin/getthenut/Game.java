@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static de.igormukhin.getthenut.ActorType.NUT;
 import static de.igormukhin.getthenut.ActorType.SQUIRREL;
 import static de.igormukhin.getthenut.SpotType.SWAMP;
@@ -73,13 +72,6 @@ public class Game {
 
     public boolean won() {
         return won;
-    }
-
-    public Game withParent(Game newParent) {
-        // both parent should have same game state
-        checkArgument(this.parent().actorSet().equals(newParent.actorSet()));
-
-        return new Game(newParent, this.actorSet(), this.ended(), this.won());
     }
 
     public List<Game> rollsAsGameList() {
@@ -189,10 +181,10 @@ public class Game {
         }
 
         private void checkGameOver() {
-            if (!currentActorSet.containsAny(SQUIRREL)) {
+            if (currentActorSet.containsNone(SQUIRREL)) {
                 finishGame(false);
 
-            } else if (!currentActorSet.containsAny(NUT)) {
+            } else if (currentActorSet.containsNone(NUT)) {
                 finishGame(actorType == SQUIRREL);
 
             } else if (actorType == SQUIRREL && land.spotTypeAt(currentActorPos) == SWAMP) {
@@ -248,8 +240,7 @@ public class Game {
                 return false;
             }
 
-            if (land.spotTypeAt(actorPos) == SWAMP
-                    && actorType.isStucksInSwamp()) {
+            if (land.spotTypeAt(actorPos) == SWAMP && actorType.isStucksInSwamp()) {
                 return false;
             }
 

@@ -6,8 +6,8 @@ public enum Direction {
     SOUTH(1, 0),
     WEST(0, -1);
 
-    private int yAxisDelta;
-    private int xAxisDelta;
+    private final int yAxisDelta;
+    private final int xAxisDelta;
 
     Direction(int yAxisDelta, int xAxisDelta) {
         this.yAxisDelta = yAxisDelta;

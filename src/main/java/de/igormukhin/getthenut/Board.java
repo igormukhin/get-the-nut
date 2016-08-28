@@ -6,8 +6,8 @@ import static java.util.Objects.requireNonNull;
 
 public class Board {
 
-    private Land land;
-    private ActorSet actorSet;
+    private final Land land;
+    private final ActorSet actorSet;
 
     public Board(Land land, ActorSet actorSet) {
         this.land = requireNonNull(land);

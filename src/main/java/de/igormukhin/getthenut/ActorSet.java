@@ -11,7 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 public class ActorSet implements Iterable<Actor> {
 
-    private ImmutableSet<Actor> actors;
+    private final ImmutableSet<Actor> actors;
 
     public ActorSet(ImmutableSet<Actor> actors) {
         this.actors = requireNonNull(actors);
@@ -32,10 +32,10 @@ public class ActorSet implements Iterable<Actor> {
         return actors.size();
     }
 
-    public boolean containsAny(ActorType actorType) {
+    public boolean containsNone(ActorType actorType) {
         checkNotNull(actorType);
 
-        return actors.stream()
+        return !actors.stream()
                 .anyMatch(a -> a.type() == actorType);
     }
 

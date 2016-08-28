@@ -13,7 +13,7 @@ import static java.util.Objects.requireNonNull;
 
 public class TextBoardParser {
 
-    private String map;
+    private final String map;
 
     private TextBoardParser(String map) {
         this.map = requireNonNull(map);

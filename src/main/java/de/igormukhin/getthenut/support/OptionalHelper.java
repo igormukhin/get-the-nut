@@ -5,6 +5,7 @@ import java.util.stream.Stream;
 
 public class OptionalHelper {
 
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     public static <T> Stream<T> toStream(Optional<T> optional) {
         return optional.isPresent() ? Stream.of(optional.get()) : Stream.empty();
     }

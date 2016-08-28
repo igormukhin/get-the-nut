@@ -24,7 +24,7 @@ public class ImmutableSetCollector<T>
 
     @Override
     public BiConsumer<ImmutableSet.Builder<T>, T> accumulator() {
-        return (builder, t) -> builder.add(t);
+        return ImmutableSet.Builder::add;
     }
 
     @Override

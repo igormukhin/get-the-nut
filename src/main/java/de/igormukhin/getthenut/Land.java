@@ -4,9 +4,9 @@ import static java.util.Objects.requireNonNull;
 
 public class Land {
 
-    private SpotType[][] spots;
-    private int height;
-    private int width;
+    private final SpotType[][] spots;
+    private final int height;
+    private final int width;
 
     public Land(SpotType[][] spots) {
         this.spots = requireNonNull(spots);

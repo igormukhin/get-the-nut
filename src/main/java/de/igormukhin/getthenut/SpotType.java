@@ -5,7 +5,7 @@ public enum SpotType {
     FORREST(false),
     SWAMP(true);
 
-    private boolean canActorBeOn;
+    private final boolean canActorBeOn;
 
     SpotType(boolean canActorBeOn) {
         this.canActorBeOn = canActorBeOn;

@@ -8,7 +8,7 @@ import java.util.List;
 
 public class TextGameFormatter {
 
-    private Game game;
+    private final Game game;
 
     private TextGameFormatter(Game game) {
         this.game = game;
